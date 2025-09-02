@@ -17,7 +17,7 @@
       <input id="url" class="url" type="url" placeholder="Paste image URL (https://...) and choose viewer" />
       <button id="addLeftBtn" class="btn">⬅️ Add to Left</button>
       <button id="addRightBtn" class="btn">Add to Right ➡️</button>
-      <button id="clearBtn" class="btn secondary" title="Clear all saved images">Clear</button>
+      <button id="clearBtn" class="btn secondary" title="Clear all saved images">Clear All</button>
     </div>
 
     <div class="comparison-container">
@@ -35,6 +35,11 @@
           <div id="zoomVal1">2.0×</div>
         </div>
         <div class="helper">Tip: you can drag the thumbnails area sideways.</div>
+        
+        <!-- Left Saved Images -->
+        <div class="saved-images">
+          <div id="leftThumbs" class="thumbs"></div>
+        </div>
       </div>
 
       <!-- Right Viewer -->
@@ -51,13 +56,15 @@
           <div id="zoomVal2">2.0×</div>
         </div>
         <div class="helper">Tip: you can drag the thumbnails area sideways.</div>
+        
+        <!-- Right Saved Images -->
+        <div class="saved-images">
+          <div id="rightThumbs" class="thumbs"></div>
+        </div>
       </div>
     </div>
 
-    <div class="thumbs-wrap">
-      <div class="thumbs-title">Saved Images</div>
-      <div id="thumbs" class="thumbs"></div>
-    </div>
+    <!-- Remove the old thumbs-wrap section -->
   </div>
 
   <div id="toast" class="toast"></div>
