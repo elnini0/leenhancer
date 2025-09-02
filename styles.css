@@ -72,7 +72,7 @@ header {
 
 .bar { 
   display: grid; 
-  grid-template-columns: 1fr auto auto; 
+  grid-template-columns: 1fr auto auto auto; 
   gap: 10px; 
   align-items: center; 
   background: var(--card); 
@@ -297,6 +297,7 @@ input[type="range"]::-webkit-slider-thumb {
 @media (max-width: 640px) {
   .bar { 
     grid-template-columns: 1fr; 
+    gap: 8px;
   }
   .zoom-controls { 
     flex-wrap: wrap; 

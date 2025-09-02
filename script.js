@@ -1,6 +1,7 @@
 const storageKey = 'leEnhancerImages';
 const urlInput = document.getElementById('url');
-const addBtn = document.getElementById('addBtn');
+const addLeftBtn = document.getElementById('addLeftBtn');
+const addRightBtn = document.getElementById('addRightBtn');
 const clearBtn = document.getElementById('clearBtn');
 const toast = document.getElementById('toast');
 
@@ -155,28 +156,30 @@ function addUnique(url) {
   setList(list);
 }
 
-addBtn.addEventListener('click', () => {
+addLeftBtn.addEventListener('click', () => {
   const url = urlInput.value.trim();
   if (!/^https?:\/\//i.test(url)) { 
     showToast('Enter a valid image URL'); 
     return; 
   }
   
-  // Load to the first empty viewer, or replace the right one if both are full
-  if (!currentUrl1) {
-    loadImage1(url);
-  } else if (!currentUrl2) {
-    loadImage2(url);
-  } else {
-    // Replace right viewer
-    loadImage2(url);
+  loadImage1(url);
+  urlInput.value = '';
+});
+
+addRightBtn.addEventListener('click', () => {
+  const url = urlInput.value.trim();
+  if (!/^https?:\/\//i.test(url)) { 
+    showToast('Enter a valid image URL'); 
+    return; 
   }
   
+  loadImage2(url);
   urlInput.value = '';
 });
 
 urlInput.addEventListener('keydown', e => { 
-  if (e.key === 'Enter') addBtn.click(); 
+  if (e.key === 'Enter') addLeftBtn.click(); 
 });
 
 clearBtn.addEventListener('click', () => {
