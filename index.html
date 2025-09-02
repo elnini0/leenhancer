@@ -107,7 +107,7 @@
 
     <div class="stage">
       <div id="viewer" class="viewer">
-        <img id="mainImg" alt="Le Enhancer" />
+        <img id="mainImg" alt="Le Enhancer" referrerpolicy="no-referrer" />
         <div id="lens" class="lens"></div>
         <div class="empty" id="empty">Add an image URL to start.</div>
       </div>
@@ -203,22 +203,23 @@
       });
     }
 
-    async function loadImage(url) {
-      empty.style.display = 'none';
-      viewer.classList.remove('loaded');
-      try {
-        const nat = await preload(url);
-        imageNatural = nat;
-        currentUrl = url;
-        mainImg.src = url;
-        viewer.classList.add('loaded');
-        addUnique(url); // ensure it is saved on click-through, too
-        renderThumbs();
-      } catch (e) {
-        showToast('Could not load image');
-        if (!currentUrl) empty.style.display = 'block';
-      }
-    }
+async function loadImage(url) {
+  empty.style.display = 'none';
+  viewer.classList.remove('loaded');
+  currentUrl = url;
+
+  mainImg.onload = () => {
+    imageNatural = { w: mainImg.naturalWidth, h: mainImg.naturalHeight };
+    viewer.classList.add('loaded');
+    lens.style.backgroundImage = `url('${currentUrl}')`;
+    lens.style.backgroundSize = `${imageNatural.w * zoomFactor}px ${imageNatural.h * zoomFactor}px`;
+    addUnique(url);
+    renderThumbs();
+  };
+  mainImg.onerror = () => showToast('Could not load image');
+  mainImg.removeAttribute('crossorigin');
+  mainImg.src = url;
+}
 
     function addUnique(url) {
       let list = getList();
