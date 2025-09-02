@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Le Enhancer</title>
+  <style>
+    :root {
+      --bg: #0f1220;
+      --card: #151a2e;
+      --muted: #8b92b4;
+      --text: #eef0fb;
+      --accent: #6ea8ff;
+      --accent-2: #8bffda;
+      --ring: rgba(110, 168, 255, 0.4);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 700px at 20% -10%, #1a1f3d 0%, transparent 60%),
+                  radial-gradient(900px 600px at 110% 10%, #0d3b66 0%, transparent 45%),
+                  var(--bg);
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; padding: 22px clamp(16px, 4vw, 40px);
+    }
+    .title { font-weight: 800; letter-spacing: 0.2px; font-size: clamp(20px, 3vw, 28px); }
+    .title span { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .shell { max-width: 1100px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px) 40px; }
+
+    .bar { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; background: var(--card); padding: 14px; border-radius: var(--radius); box-shadow: var(--shadow); }
+    .url {
+      width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid transparent;
+      background: #0d1124; color: var(--text); outline: none;
+    }
+    .url::placeholder { color: #5f668a; }
+    .url:focus { border-color: var(--accent); box-shadow: 0 0 0 6px var(--ring); }
+    .btn {
+      appearance: none; border: 0; padding: 12px 16px; border-radius: 12px; cursor: pointer; font-weight: 700;
+      background: linear-gradient(180deg, #4067ff, #2351ff); color: white; box-shadow: 0 6px 18px rgba(64,103,255,.35);
+      transition: transform .08s ease, box-shadow .2s ease, opacity .15s ease; white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(64,103,255,.40); }
+    .btn:active { transform: translateY(0); }
+    .btn.secondary {
+      background: #252b49; color: var(--text); box-shadow: inset 0 0 0 1px #37406a;
+    }
+
+    .stage {
+      margin-top: 20px; background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow);
+    }
+    .viewer {
+      position: relative; overflow: hidden; border-radius: 14px; background: #0b0f22; min-height: 420px;
+      display: grid; place-items: center; border: 1px solid #242b4b;
+    }
+    .viewer img { max-width: 100%; height: auto; display: block; opacity: 0; transition: opacity .25s ease; }
+    .viewer.loaded img { opacity: 1; }
+
+    /* Magnifier */
+    .lens { position: absolute; width: 180px; height: 180px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25); box-shadow: 0 12px 30px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.08);
+      display: none; pointer-events: none; }
+
+    .zoom-controls { display: flex; gap: 10px; align-items: center; margin: 14px 4px 6px; color: var(--muted); }
+    .slider { width: 220px; }
+    input[type="range"] { width: 100%; appearance: none; height: 6px; border-radius: 4px; background: #2a3158; outline: none; }
+    input[type="range"]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--ring); cursor: pointer; }
+
+    .thumbs-wrap { margin-top: 22px; }
+    .thumbs-title { margin: 0 0 8px 2px; color: var(--muted); font-weight: 600; font-size: 13px; letter-spacing: .2px; }
+    .thumbs {
+      display: grid; grid-auto-flow: column; gap: 12px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin;
+    }
+    .thumb { position: relative; width: 120px; height: 80px; flex: 0 0 auto; border-radius: 10px; overflow: hidden; border: 1px solid #24305a; cursor: pointer; }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .thumb .x { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.55); color: #fff; border: 0; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; cursor: pointer; display: grid; place-items: center; }
+    .thumb.active { outline: 2px solid var(--accent); }
+
+    .helper { color: var(--muted); font-size: 14px; margin: 6px 4px 0; }
+    .empty { color: var(--muted); text-align: center; padding: 40px; }
+    .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px; background: #0d1124; border: 1px solid #2b3561; color: var(--text); padding: 10px 14px; border-radius: 10px; box-shadow: var(--shadow); pointer-events: none; opacity: 0; transition: opacity .2s ease; }
+    .toast.show { opacity: 1; }
+    @media (max-width: 640px) {
+      .bar { grid-template-columns: 1fr; }
+      .zoom-controls { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">Le <span>Enhancer</span></div>
+    <div style="opacity:.7;font-size:13px">Hover to magnify. Scroll to adjust zoom.</div>
+  </header>
+
+  <div class="shell">
+    <div class="bar">
+      <input id="url" class="url" type="url" placeholder="Paste image URL (https://...) and hit Add" />
+      <button id="addBtn" class="btn">Add</button>
+      <button id="clearBtn" class="btn secondary" title="Clear all saved images">Clear</button>
+    </div>
+
+    <div class="stage">
+      <div id="viewer" class="viewer">
+        <img id="mainImg" alt="Le Enhancer" />
+        <div id="lens" class="lens"></div>
+        <div class="empty" id="empty">Add an image URL to start.</div>
+      </div>
+      <div class="zoom-controls">
+        <div>Zoom:</div>
+        <div class="slider"><input id="zoom" type="range" min="1.2" max="4" step="0.1" value="2"></div>
+        <div id="zoomVal">2.0×</div>
+      </div>
+      <div class="helper">Tip: you can drag the thumbnails area sideways.
+      </div>
+    </div>
+
+    <div class="thumbs-wrap">
+      <div class="thumbs-title">Saved</div>
+      <div id="thumbs" class="thumbs"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const storageKey = 'leEnhancerImages';
+    const urlInput = document.getElementById('url');
+    const addBtn = document.getElementById('addBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const viewer = document.getElementById('viewer');
+    const mainImg = document.getElementById('mainImg');
+    const lens = document.getElementById('lens');
+    const empty = document.getElementById('empty');
+    const thumbs = document.getElementById('thumbs');
+    const zoom = document.getElementById('zoom');
+    const zoomVal = document.getElementById('zoomVal');
+    const toast = document.getElementById('toast');
+
+    let imageNatural = { w: 0, h: 0 };
+    let currentUrl = '';
+    let zoomFactor = parseFloat(zoom.value);
+
+    function showToast(msg) {
+      toast.textContent = msg; toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1400);
+    }
+
+    function getList() {
+      try { return JSON.parse(localStorage.getItem(storageKey)) || []; } catch { return []; }
+    }
+    function setList(list) {
+      localStorage.setItem(storageKey, JSON.stringify(list));
+    }
+
+    function renderThumbs() {
+      const list = getList();
+      thumbs.innerHTML = '';
+      if (!list.length) return;
+      list.forEach(u => {
+        const el = document.createElement('div');
+        el.className = 'thumb' + (u === currentUrl ? ' active' : '');
+        el.title = u;
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.src = u;
+        const del = document.createElement('button');
+        del.className = 'x';
+        del.textContent = '×';
+        del.addEventListener('click', e => {
+          e.stopPropagation();
+          const filtered = getList().filter(x => x !== u);
+          setList(filtered); renderThumbs();
+          if (u === currentUrl) {
+            if (filtered[0]) loadImage(filtered[0]); else resetViewer();
+          }
+        });
+        el.addEventListener('click', () => loadImage(u));
+        el.appendChild(img); el.appendChild(del);
+        thumbs.appendChild(el);
+      });
+    }
+
+    function resetViewer() {
+      currentUrl = '';
+      mainImg.src = '';
+      viewer.classList.remove('loaded');
+      empty.style.display = 'block';
+    }
+
+    async function preload(url) {
+      return new Promise((resolve, reject) => {
+        const im = new Image();
+        im.onload = () => resolve({ w: im.naturalWidth, h: im.naturalHeight });
+        im.onerror = reject;
+        im.crossOrigin = 'anonymous'; // best effort for some hosts; ok if it fails
+        im.src = url;
+      });
+    }
+
+    async function loadImage(url) {
+      empty.style.display = 'none';
+      viewer.classList.remove('loaded');
+      try {
+        const nat = await preload(url);
+        imageNatural = nat;
+        currentUrl = url;
+        mainImg.src = url;
+        viewer.classList.add('loaded');
+        addUnique(url); // ensure it is saved on click-through, too
+        renderThumbs();
+      } catch (e) {
+        showToast('Could not load image');
+        if (!currentUrl) empty.style.display = 'block';
+      }
+    }
+
+    function addUnique(url) {
+      let list = getList();
+      list = [url, ...list.filter(x => x !== url)];
+      setList(list);
+    }
+
+    addBtn.addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      if (!/^https?:\/\//i.test(url)) { showToast('Enter a valid image URL'); return; }
+      loadImage(url);
+      urlInput.value = '';
+    });
+    urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') addBtn.click(); });
+
+    clearBtn.addEventListener('click', () => {
+      localStorage.removeItem(storageKey);
+      renderThumbs();
+      showToast('Cleared');
+    });
+
+    // Magnifier logic
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+    function moveLens(e) {
+      if (!currentUrl) return;
+      const rect = viewer.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const lensR = lens.offsetWidth / 2;
+      const lx = clamp(x - lensR, 0, rect.width - lens.offsetWidth);
+      const ly = clamp(y - lensR, 0, rect.height - lens.offsetHeight);
+      lens.style.left = lx + 'px';
+      lens.style.top = ly + 'px';
+
+      // Compute background mapping based on image placement within viewer
+      const imgRect = mainImg.getBoundingClientRect();
+      const imgX = clamp(e.clientX - imgRect.left, 0, imgRect.width);
+      const imgY = clamp(e.clientY - imgRect.top, 0, imgRect.height);
+
+      const bx = (imgX / imgRect.width) * (imageNatural.w * zoomFactor - lens.offsetWidth);
+      const by = (imgY / imgRect.height) * (imageNatural.h * zoomFactor - lens.offsetHeight);
+      lens.style.backgroundPosition = `-${bx}px -${by}px`;
+    }
+
+    function showLens(e) {
+      if (!currentUrl) return;
+      lens.style.display = 'block';
+      lens.style.backgroundImage = `url('${currentUrl}')`;
+      lens.style.backgroundRepeat = 'no-repeat';
+      lens.style.backgroundSize = `${imageNatural.w * zoomFactor}px ${imageNatural.h * zoomFactor}px`;
+      moveLens(e);
+    }
+    function hideLens() { lens.style.display = 'none'; }
+
+    viewer.addEventListener('mouseenter', showLens);
+    viewer.addEventListener('mousemove', moveLens);
+    viewer.addEventListener('mouseleave', hideLens);
+
+    // Scroll to change zoom
+    viewer.addEventListener('wheel', e => {
+      if (!currentUrl) return;
+      e.preventDefault();
+      const step = e.deltaY > 0 ? -0.1 : 0.1;
+      const next = clamp(parseFloat(zoom.value) + step, parseFloat(zoom.min), parseFloat(zoom.max));
+      if (next !== parseFloat(zoom.value)) {
+        zoom.value = next.toFixed(1);
+        zoom.dispatchEvent(new Event('input'));
+      }
+    }, { passive: false });
+
+    zoom.addEventListener('input', () => {
+      zoomFactor = parseFloat(zoom.value);
+      zoomVal.textContent = zoomFactor.toFixed(1) + '×';
+      if (currentUrl) {
+        lens.style.backgroundSize = `${imageNatural.w * zoomFactor}px ${imageNatural.h * zoomFactor}px`;
+      }
+    });
+
+    // Restore from storage on load
+    (function init() {
+      renderThumbs();
+      const list = getList();
+      if (list[0]) loadImage(list[0]);
+    })();
+  </script>
+</body>
+</html>
